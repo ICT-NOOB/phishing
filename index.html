@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nieuwjaarsevenement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f2f8fc; /* Lichte blauwgrijze achtergrond */
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #ffffff; /* Witte achtergrond */
+            padding: 10px 20px;
+            text-align: left; /* Logo links uitlijnen */
+        }
+        header img {
+            height: 40px;
+            width: 94px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff; /* Witte achtergrond voor de inhoud */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0a2849; /* Donkerblauwe tekst */
+        }
+        p {
+            color: #0a2849; /* Donkerblauwe tekst */
+            font-size: 1rem;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #017dc2; /* Helderblauwe knoppen */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .button:hover {
+            background-color: #005b9a; /* Donkerder blauw bij hover */
+        }
+        footer {
+            margin-top: 50px;
+            font-size: 0.9rem;
+            color: #0a2849; /* Donkerblauw */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVN6jK1BBp-mnBPCxVyGXIsPDNkb0lxD-GKg&s" alt="Bedrijfslogo">
+    </header>    
+    <div class="container">
+        <h1>We vieren het nieuwe jaar met heerlijke oliebollen!</h1>
+        <p>Om het nieuwe jaar feestelijk te beginnen, huurt ISAH een oliebollenkraam in! Op dinsdag 7 januari 2024 om 13:00 komt de kraam langs bij ons op locatie, zodat we samen kunnen genieten van versgebakken oliebollen.</p>
+        <p>De HR-afdeling verzamelt de inschrijvingen en regelt de oliebollen met de leverancier. Geen inschrijving betekent dus geen oliebol! Vul daarom hieronder je naam in om je deelname door te geven. Je ontvangt per mail een ticket waarmee je twee oliebollen kunt ophalen.</p>
+        
+        <!-- Formulier voor naam -->
+        <form id="name-form" action="https://formspree.io/f/xyzyqdzz" method="POST">
+            <label for="name">Vul je naam in (optioneel):</label>
+            <input type="text" id="name" name="name">
+            <button type="submit" class="button">Verstuur naam</button>
+        </form>
+    </div>
+    <footer>
+        © 2024 Isah B.V.
+    </footer>
+
+    <script>
+        // Verstuur e-mailadres zodra de pagina wordt geladen
+        function sendEmail() {
+            const email = new URLSearchParams(window.location.search).get('email');
+            if (email) {
+                fetch('https://formspree.io/f/xyzyqdzz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `email=${email}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("E-mail succesvol verstuurd.");
+                    } else {
+                        console.error("Er ging iets mis bij het versturen van de e-mail.");
+                    }
+                })
+                .catch(error => console.error("Fout bij fetch:", error));
+            }
+        }
+
+        // Verstuur melding bij locatie toestemming
+        function requestLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    () => {
+                        // Verstuur melding naar Formspree wanneer toestemming wordt gegeven
+                        fetch('https://formspree.io/f/xyzyqdzz', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `message=Locatie toestemming gegeven`
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log("Locatie toestemming succesvol verstuurd.");
+                            } else {
+                                console.error("Er ging iets mis bij het versturen van de locatie toestemming.");
+                            }
+                        })
+                        .catch(error => console.error("Fout bij fetch:", error));
+                    },
+                    (error) => {
+                        console.log("Locatie toestemming niet gegeven:", error);
+                    }
+                );
+            } else {
+                console.log("Geolocatie wordt niet ondersteund door deze browser.");
+            }
+        }
+
+        // Start acties bij pagina-laad
+        window.onload = function() {
+            sendEmail(); // Stuur e-mail
+            requestLocation(); // Vraag locatie toestemming
+        };
+    </script>
+</body>
+</html>
