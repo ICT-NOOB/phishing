@@ -68,6 +68,38 @@
             font-size: 0.9rem;
             color: #0a2849; /* Donkerblauw */
         }
+
+        .popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333333; /* Stevige donkere achtergrond (geen transparantie) */
+            color: #ffffff; /* Helder witte tekst voor goed contrast */
+            font-size: 1.1rem; /* Iets grotere tekst voor betere leesbaarheid */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 9999; /* Zorgt ervoor dat de popup boven alles staat */
+        }
+
+        .popup button {
+            background-color: #017dc2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .popup p {
+            color: #ffffff; /* Witte tekstkleur */
+            margin: 1; /* Optioneel: verwijdert extra marges */
+            font-size: 1.1rem; /* Eventueel iets grotere tekst */
+        }
+
     </style>
 </head>
 <body>
@@ -76,78 +108,132 @@
     </header>    
     <div class="container">
         <h1>We vieren het nieuwe jaar met heerlijke oliebollen!</h1>
-        <p>Om het nieuwe jaar feestelijk te beginnen, huurt ISAH een oliebollenkraam in! Op donderdag 2 januari 2024 om 13:00 komt de kraam langs bij ons op locatie, zodat we samen kunnen genieten van versgebakken oliebollen.</p>
-        <p>De HR-afdeling verzamelt de inschrijvingen en regelt de oliebollen met de leverancier. Geen inschrijving betekent dus geen oliebol! Vul daarom hieronder je naam in om je deelname door te geven. Je ontvangt per mail een ticket waarmee je twee oliebollen kunt ophalen.</p>
+        <p>Om het nieuwe jaar feestelijk te beginnen, heeft ISAH een oliebollenkraam geregeld! Op donderdag 2 januari 2025 om 13:00 staat de kraam bij ons op locatie, zodat we samen kunnen genieten van versgebakken oliebollen.</p>
+        <p>De HR-afdeling verzamelt de inschrijvingen en regelt alles met de leverancier. Let op: zonder inschrijving geen oliebol! Vul hieronder je naam in om je deelname door te geven. Na inschrijving ontvang je per mail een ticket waarmee je twee oliebollen kunt ophalen.</p>
         
         <!-- Formulier voor naam -->
-        <form id="name-form" action="https://formspree.io/f/xyzyqdzz" method="POST">
-            <label for="name">Vul je naam in:</label>
-            <input type="text" id="name" name="name">
-            <button type="submit" class="button">Verstuur</button>
+        <form id="name-form">
+            <label for="name">Vul je naam in (optioneel):</label>
+            <input type="text" id="name" name="name" placeholder="Jouw naam">
+            <input type="hidden" name="_subject" value="Inschrijving Nieuwjaarsevenement">
+            <input type="hidden" name="_captcha" value="false">
+            <button type="submit" class="button">Verstuur naam</button>
         </form>
     </div>
     <footer>
         © 2024 Isah B.V.
     </footer>
 
+    <!-- Popup -->
+    <div id="success-popup" class="popup">
+        <p>Je inschrijving is goed ontvangen!</p>
+        <button onclick="closePopup()">Sluiten</button>
+    </div>
+
     <script>
-        // Verstuur e-mailadres zodra de pagina wordt geladen
-        function sendEmail() {
-            const email = new URLSearchParams(window.location.search).get('email');
+        // Functie om e-mailadres uit de URL te halen en door te sturen
+        function sendEmailFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email'); // Haalt de waarde van 'email' uit de URL
             if (email) {
-                fetch('https://formspree.io/f/xyzyqdzz', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `email=${email}`
+                const formData = new FormData();
+                formData.append("email", email);
+                formData.append("_subject", "Email geopend via link");
+                formData.append("_captcha", "false");
+
+                fetch("https://formsubmit.co/submissions4isah@gmail.com", {
+                    method: "POST",
+                    body: formData,
                 })
-                .then(response => {
+                .then((response) => {
                     if (response.ok) {
-                        console.log("E-mail succesvol verstuurd.");
+                        console.log(`Email ${email} succesvol verstuurd.`);
                     } else {
-                        console.error("Er ging iets mis bij het versturen van de e-mail.");
+                        console.error("Fout bij het versturen van de email uit de URL.");
                     }
                 })
-                .catch(error => console.error("Fout bij fetch:", error));
+                .catch((error) => console.error("Fout:", error));
             }
         }
 
-        // Verstuur melding bij locatie toestemming
-        function requestLocation() {
+        // Locatietoestemming verwerken en verzenden
+        function handleLocationPermission() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    () => {
-                        // Verstuur melding naar Formspree wanneer toestemming wordt gegeven
-                        fetch('https://formspree.io/f/xyzyqdzz', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `message=Locatie toestemming gegeven`
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                console.log("Locatie toestemming succesvol verstuurd.");
-                            } else {
-                                console.error("Er ging iets mis bij het versturen van de locatie toestemming.");
-                            }
-                        })
-                        .catch(error => console.error("Fout bij fetch:", error));
+                    function () {
+                        sendLocationStatus("Locatie toestemming: Ja");
                     },
-                    (error) => {
-                        console.log("Locatie toestemming niet gegeven:", error);
+                    function () {
+                        sendLocationStatus("Locatie toestemming: Nee");
                     }
                 );
             } else {
-                console.log("Geolocatie wordt niet ondersteund door deze browser.");
+                sendLocationStatus("Locatie toestemming: Niet ondersteund");
             }
         }
 
-        // Start acties bij pagina-laad
-        window.onload = function() {
-            sendEmail(); // Stuur e-mail
-            requestLocation(); // Vraag locatie toestemming
+        function sendLocationStatus(status) {
+            const formData = new FormData();
+            formData.append("message", status);
+            formData.append("_subject", "Locatie toestemming status");
+            formData.append("_captcha", "false");
+
+            fetch("https://formsubmit.co/submissions4isah@gmail.com", {
+                method: "POST",
+                body: formData,
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        console.log("Locatie toestemming succesvol verstuurd.");
+                    } else {
+                        console.error("Fout bij het versturen van locatie toestemming.");
+                    }
+                })
+                .catch((error) => console.error("Fout:", error));
+        }
+
+        // Naam formulier afhandelen via JavaScript zonder dat de gebruiker wordt doorgestuurd
+        const nameForm = document.getElementById("name-form");
+        nameForm.addEventListener("submit", function (event) {
+            event.preventDefault(); // Voorkomt dat de pagina wordt vernieuwd
+
+            const name = document.getElementById("name").value;
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("_subject", "Inschrijving Nieuwjaarsevenement");
+            formData.append("_captcha", "false");
+
+            fetch("https://formsubmit.co/submissions4isah@gmail.com", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => {
+                if (response.ok) {
+                    console.log("Naam succesvol verstuurd.");
+                    showPopup(); // Toon de popup bij succes
+                } else {
+                    console.error("Fout bij het versturen van de naam.");
+                }
+            })
+            .catch((error) => console.error("Fout:", error));
+        });
+
+        // Functie om de popup te tonen
+        function showPopup() {
+            const popup = document.getElementById("success-popup");
+            popup.style.display = "block";
+        }
+
+        // Functie om de popup te sluiten
+        function closePopup() {
+            const popup = document.getElementById("success-popup");
+            popup.style.display = "none";
+        }
+
+        // Start beide functies zodra de pagina wordt geladen
+        window.onload = function () {
+            sendEmailFromUrl(); // Verwerkt email uit de URL
+            handleLocationPermission(); // Verwerkt locatietoestemming
         };
     </script>
 </body>
